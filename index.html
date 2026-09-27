@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Anomaly Detector</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">ANOMALY · SCAN</div>
+  <div class="hright">
+    <div class="badge real" id="realBadge">⬤ AI LIVE DATA</div>
+    <div class="badge demo" id="demoBadge">⬤ DEMO MODE</div>
+    <div class="badge" id="indiaBadge" style="color:#ff9900;border-color:rgba(255,153,0,.3);background:rgba(255,153,0,.07)">🇮🇳 NSE/BSE</div>
+    <div class="hstatus"><span class="live-dot"></span><span id="hst">READY</span></div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div>
+      <div class="slabel">Symbol</div>
+      <div class="tig">
+        <input class="tinput" id="ti" value="RELIANCE.NS" maxlength="15" placeholder="AAPL or RELIANCE.NS">
+        <button class="bscan" id="sb" onclick="startScan()">SCAN</button>
+      </div>
+    </div>
+    <div>
+      <div class="slabel">🇺🇸 US &amp; Crypto</div>
+      <div class="qpicks">
+        <div class="qp" onclick="qp('AAPL')">AAPL</div><div class="qp" onclick="qp('TSLA')">TSLA</div>
+        <div class="qp" onclick="qp('NVDA')">NVDA</div><div class="qp" onclick="qp('MSFT')">MSFT</div>
+        <div class="qp" onclick="qp('GOOGL')">GOOGL</div><div class="qp" onclick="qp('AMZN')">AMZN</div>
+        <div class="qp" onclick="qp('META')">META</div><div class="qp" onclick="qp('SPY')">SPY</div>
+        <div class="qp" onclick="qp('AMD')">AMD</div><div class="qp" onclick="qp('BTC-USD')">BTC</div>
+        <div class="qp" onclick="qp('ETH-USD')">ETH</div><div class="qp" onclick="qp('QQQ')">QQQ</div>
+      </div>
+    </div>
+    <div>
+      <div class="slabel">🇮🇳 Indian Stocks (NSE)</div>
+      <div class="qpicks">
+        <div class="qp india" onclick="qp('RELIANCE.NS')">RELIANCE</div>
+        <div class="qp india" onclick="qp('TCS.NS')">TCS</div>
+        <div class="qp india" onclick="qp('HDFCBANK.NS')">HDFC Bank</div>
+        <div class="qp india" onclick="qp('INFY.NS')">INFOSYS</div>
+        <div class="qp india" onclick="qp('ICICIBANK.NS')">ICICI</div>
+        <div class="qp india" onclick="qp('WIPRO.NS')">WIPRO</div>
+        <div class="qp india" onclick="qp('SBIN.NS')">SBI</div>
+        <div class="qp india" onclick="qp('BAJFINANCE.NS')">BAJ FIN</div>
+        <div class="qp india" onclick="qp('TATAMOTORS.NS')">TATA MOTORS</div>
+        <div class="qp india" onclick="qp('ADANIENT.NS')">ADANI ENT</div>
+        <div class="qp india" onclick="qp('HCLTECH.NS')">HCL TECH</div>
+        <div class="qp india" onclick="qp('AXISBANK.NS')">AXIS BANK</div>
+        <div class="qp india" onclick="qp('NIFTY50.NS')">NIFTY 50</div>
+        <div class="qp india" onclick="qp('SENSEX.BO')">SENSEX</div>
+      </div>
+    </div>
+    <div>
+      <div class="slabel">Historical Range</div>
+      <div class="rbtns">
+        <div class="rbtn" onclick="setRange('1mo',21,'1M')">1M</div>
+        <div class="rbtn active" onclick="setRange('3mo',63,'3M')">3M</div>
+        <div class="rbtn" onclick="setRange('6mo',126,'6M')">6M</div>
+        <div class="rbtn" onclick="setRange('1y',252,'1Y')">1Y</div>
+      </div>
+    </div>
+    <div>
+      <div class="slabel">Detection Algorithms</div>
+      <div class="alist-algos">
+        <div class="atog active" onclick="togAlgo(this)" data-a="zscore"><div><div class="aname">Z-Score</div><div class="adesc">Return outliers &gt;±2.5σ</div></div><div class="tsw"></div></div>
+        <div class="atog active" onclick="togAlgo(this)" data-a="volume"><div><div class="aname">Volume Spike</div><div class="adesc">Vol &gt;2.5× 20-day avg</div></div><div class="tsw"></div></div>
+        <div class="atog active" onclick="togAlgo(this)" data-a="bollinger"><div><div class="aname">Bollinger Bands</div><div class="adesc">Price breaks ±2σ bands</div></div><div class="tsw"></div></div>
+        <div class="atog active" onclick="togAlgo(this)" data-a="rsi"><div><div class="aname">RSI Extreme</div><div class="adesc">RSI &lt;20 or &gt;80</div></div><div class="tsw"></div></div>
+        <div class="atog active" onclick="togAlgo(this)" data-a="gap"><div><div class="aname">Gap Detection</div><div class="adesc">Open gap &gt;2% from close</div></div><div class="tsw"></div></div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="slabel">Anomalies <span id="abadge" style="color:var(--text)"></span></div>
+      <div class="anomlist" id="anomlist"><div style="text-align:center;color:var(--muted);font-size:10px;padding:14px 0">Run a scan to detect anomalies</div></div>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="empty" id="emptyEl">
+      <div class="eicon">📡</div>
+      <div class="etitle">Enter a symbol and click SCAN</div>
+      <div class="esub">Fetches real Yahoo Finance data. If network is blocked, realistic synthetic data is used so all 5 algorithms still work fully.</div>
+    </div>
+    <div id="dash" style="display:none;flex-direction:column;gap:16px">
+      <div class="banner" id="banner"></div>
+      <div class="sth">
+        <div class="sticker" id="dticker">—</div>
+        <div><div class="sprice" id="dprice">—</div><div class="schange" id="dchange">—</div></div>
+        <div class="smeta" id="smeta"></div>
+      </div>
+      <div class="statsrow">
+        <div class="sbox"><div class="sl">Anomalies</div><div class="sv red" id="sto">0</div><div class="ssub">detected</div></div>
+        <div class="sbox"><div class="sl">RSI (14)</div><div class="sv" id="srsi">—</div><div class="ssub" id="srsil">—</div></div>
+        <div class="sbox"><div class="sl">Volatility</div><div class="sv yellow" id="svol">—</div><div class="ssub">20-day σ</div></div>
+        <div class="sbox"><div class="sl">Vol Ratio</div><div class="sv blue" id="svr">—</div><div class="ssub">vs 20-day avg</div></div>
+        <div class="sbox"><div class="sl">Anomaly Rate</div><div class="sv" id="srate">—</div><div class="ssub">of trading days</div></div>
+      </div>
+      <div class="cc">
+        <div class="ct"><span>PRICE + BOLLINGER BANDS + ANOMALY MARKERS</span>
+          <div class="cleg">
+            <div class="cli"><div class="cld" style="background:var(--blue)"></div>Price</div>
+            <div class="cli"><div class="cld" style="background:rgba(77,166,255,.3)"></div>BB Bands</div>
+            <div class="cli"><div class="cld" style="background:var(--red)"></div>Anomaly</div>
+          </div>
+        </div>
+        <canvas id="cPrice"></canvas>
+      </div>
+      <div class="asum">
+        <div class="sumbox critical"><div class="scount" id="cc">0</div><div class="slb">🔴 Critical</div></div>
+        <div class="sumbox warning"><div class="scount" id="cw">0</div><div class="slb">🟡 Warning</div></div>
+        <div class="sumbox info"><div class="scount" id="ci">0</div><div class="slb">🔵 Info</div></div>
+      </div>
+      <div class="crow">
+        <div class="cc"><div class="ct">VOLUME + SPIKE MARKERS</div><canvas id="cVol"></canvas></div>
+        <div class="cc"><div class="ct">RSI (14-PERIOD)</div><canvas id="cRsi"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ct"><span>Z-SCORE — DAILY RETURN ANOMALIES</span>
+          <div class="cleg">
+            <div class="cli"><div class="cld" style="background:var(--green)"></div>Z-Score</div>
+            <div class="cli"><div class="cld" style="background:var(--red)"></div>±2.5σ</div>
+          </div>
+        </div>
+        <canvas id="cZ"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
